@@ -861,7 +861,3 @@ p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   .sky__star, .week__bar, .array__row, .flat, .fraction__part.is-on, .child-form { animation: none; }
 }
-
-.btn--google { width: 100%; background: var(--surface); }
-.auth__or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 14px; font-weight: 400; }
-.auth__or::before, .auth__or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
