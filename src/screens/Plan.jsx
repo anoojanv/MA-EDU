@@ -1,8 +1,11 @@
 import React from 'react'
 import { SKILL_BY_ID } from '../data/skills.js'
 import { Ring } from '../components/Meter.jsx'
+import { WeekChart } from '../components/WeekChart.jsx'
+import { LEVEL_INFO, levelFor } from '../data/curriculum.js'
 
-export function Plan({ learner, plan, unitIndex, sessions, progress, onSetUnit }) {
+export function Plan({ learner, plan, unitIndex, sessions, progress, onSetUnit, onFamily }) {
+  const auto = levelFor(learner.birth_date)
   const entries = Object.values(progress)
   const answered = entries.reduce((t, e) => t + e.answered, 0)
   const correct = entries.reduce((t, e) => t + e.correct, 0)
@@ -23,7 +26,12 @@ export function Plan({ learner, plan, unitIndex, sessions, progress, onSetUnit }
         <p className="eyebrow">For grown-ups</p>
         <h1>{plan.title}</h1>
         <p className="plan__sub">
-          Follows the {plan.program}. About {plan.minutes} minutes a day: three short on-screen steps, then one activity together. A unit moves on after {plan.sessionsPerUnit} days.
+          Follows the {plan.program}. About {plan.minutes} minutes a day: three short on-screen steps, then one activity together.
+          A unit usually takes {plan.sessionsPerUnit} days. It moves on early when {learner.name} is acing it, and adds extra practice days when it is still tricky.
+        </p>
+        <p className="plan__level">
+          <span className="chip">{LEVEL_INFO[plan.level].long}{learner.level_override && learner.level_override !== auto ? ' · set by you' : ' · from birthday'}</span>
+          <button className="btn btn--sm" onClick={onFamily}>Change level or details</button>
         </p>
         <dl className="stats">
           {stats.map((s) => (
@@ -34,6 +42,8 @@ export function Plan({ learner, plan, unitIndex, sessions, progress, onSetUnit }
           ))}
         </dl>
       </header>
+
+      <WeekChart childId={learner.id} />
 
       <ol className="timeline">
         {plan.units.map((u, i) => {

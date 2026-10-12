@@ -1,17 +1,18 @@
-const KEY = 'maanu-learning:v1'
+// Device preferences (sound on/off). Learning progress lives in Supabase.
+const KEY = 'ma-learning:prefs:v1'
 
-export function load() {
+export function loadPrefs() {
   try {
     const raw = window.localStorage.getItem(KEY)
-    return raw ? JSON.parse(raw) : null
+    return { muted: false, ...(raw ? JSON.parse(raw) : {}) }
   } catch {
-    return null
+    return { muted: false }
   }
 }
 
-export function save(state) {
+export function savePrefs(prefs) {
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(state))
+    window.localStorage.setItem(KEY, JSON.stringify(prefs))
   } catch {}
 }
 

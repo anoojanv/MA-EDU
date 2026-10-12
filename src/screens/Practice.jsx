@@ -18,7 +18,7 @@ export function Practice({ skill, learner, params, goal, stepLabel, entry, readA
   const score = entry?.score || 0
   const scoreRef = useRef(score)
   scoreRef.current = score
-  const ctx = () => ({ score: scoreRef.current, name: learner.name, params })
+  const ctx = () => ({ score: scoreRef.current, name: learner.name, theme: learner.theme, params })
 
   const [q, setQ] = useState(() => makeQuestion(skill, ctx(), null))
   const [phase, setPhase] = useState('asking')

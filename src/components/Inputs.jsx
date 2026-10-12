@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Coin, Items } from './Visuals.jsx'
+import { Shape } from './Shapes.jsx'
 import { sfx } from '../lib/audio.js'
 
 function stateOf(choice, picked, answer, phase) {
@@ -20,13 +21,15 @@ export function Choices({ q, picked, phase, onPick }) {
           className={`choice ${stateOf(c, picked, q.answer, phase)}`}
           style={{ '--i': i }}
           aria-disabled={locked}
-          aria-label={c.kind === 'group' ? `Group of ${c.n}` : c.kind === 'coin' ? `Coin marked ${c.label}` : String(c.label)}
+          aria-label={c.kind === 'group' ? `Group of ${c.n}` : c.kind === 'coin' ? `Coin marked ${c.label}` : c.kind === 'shape' ? 'A shape' : String(c.label)}
           onClick={(e) => !locked && onPick(c.value, e.currentTarget)}
         >
           {c.kind === 'group' ? (
             <Items emoji={c.emoji} n={c.n} cols={Math.min(c.n, 4)} small />
           ) : c.kind === 'coin' ? (
             <Coin kind={c.coin} size={88} />
+          ) : c.kind === 'shape' ? (
+            <Shape kind={c.shape} tone={c.tone} />
           ) : (
             <span className="choice__label">{c.label}</span>
           )}

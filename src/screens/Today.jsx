@@ -6,6 +6,12 @@ import { SKILL_BY_ID } from '../data/skills.js'
 import { speak } from '../lib/audio.js'
 
 function greeting(theme, name, step) {
+  if (theme === 'space') {
+    if (step === 0) return `Blast off, ${name}! Four planets to visit today.`
+    if (step < 3) return `Landed on ${TRAIL_NAMES.space[step - 1]}! Next planet!`
+    if (step === 3) return 'Last stop! This mission we do together.'
+    return 'Mission complete! What a trip.'
+  }
   if (theme === 'garden') {
     if (step === 0) return `Hi ${name}! Let’s make the flowers bloom.`
     if (step < 3) return 'A flower bloomed! Let’s find the next one.'
@@ -30,7 +36,8 @@ export function Today({ learner, plan, unitIndex, unitSessions, step, readAloud,
   ]
   const done = step >= 4
   const line = greeting(learner.theme, learner.name, step)
-  const day = Math.min(plan.sessionsPerUnit, unitSessions + (done ? 0 : 1))
+  const day = unitSessions + (done ? 0 : 1)
+  const pips = Math.max(plan.sessionsPerUnit, day)
 
   useEffect(() => {
     if (!readAloud) return
@@ -44,10 +51,16 @@ export function Today({ learner, plan, unitIndex, unitSessions, step, readAloud,
     <div className="today">
       {unitNews && (
         <div className="news" role="status">
-          <span className="news__icon" aria-hidden="true">🏅</span>
-          <p>
-            <b>{learner.name} finished “{unitNews.done}”.</b> Next up: {unitNews.next}.
-          </p>
+          <span className="news__icon" aria-hidden="true">{unitNews.extra ? '💪' : '🏅'}</span>
+          {unitNews.extra ? (
+            <p>
+              <b>A few more days of “{unitNews.extra}”.</b> {learner.name} is still getting the hang of it, so we added extra practice before moving on.
+            </p>
+          ) : (
+            <p>
+              <b>{learner.name} {unitNews.early ? 'aced' : 'finished'} “{unitNews.done}”{unitNews.early ? ' early' : ''}.</b> Next up: {unitNews.next}.
+            </p>
+          )}
           <button className="news__close" onClick={onDismissNews} aria-label="Dismiss">×</button>
         </div>
       )}
@@ -59,11 +72,11 @@ export function Today({ learner, plan, unitIndex, unitSessions, step, readAloud,
           <SpeakerIcon size={20} />
           <span>{unit.goal}</span>
         </button>
-        <div className="daypips" aria-label={`Day ${day} of ${plan.sessionsPerUnit} in this unit`}>
-          {Array.from({ length: plan.sessionsPerUnit }, (_, i) => (
+        <div className="daypips" aria-label={`Day ${day} of ${pips} in this unit`}>
+          {Array.from({ length: pips }, (_, i) => (
             <span key={i} className={'daypip' + (i < unitSessions ? ' is-done' : i === unitSessions && !done ? ' is-now' : '')} />
           ))}
-          <span className="daypips__label">Day {day} of {plan.sessionsPerUnit}</span>
+          <span className="daypips__label">{day > plan.sessionsPerUnit ? `Extra practice · day ${day}` : `Day ${day} of ${plan.sessionsPerUnit}`}</span>
         </div>
       </section>
 
