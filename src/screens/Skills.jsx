@@ -1,10 +1,10 @@
 import React from 'react'
-import { SKILLS, SUBJECTS, LEVELS } from '../data/skills.js'
+import { SUBJECTS, LEVELS, skillsFor } from '../data/skills.js'
 import { Ring } from '../components/Meter.jsx'
 import { tier } from '../lib/mastery.js'
 
 export function Skills({ learner, level, onLevel, progress, onOpen }) {
-  const list = SKILLS.filter((s) => s.level === level)
+  const list = skillsFor(level)
   const groups = []
   for (const s of list) {
     let g = groups.find((x) => x[0] === s.subject)

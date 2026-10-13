@@ -8,3 +8,6 @@ export const COINS = {
 }
 
 export const COIN_KINDS = Object.keys(COINS)
+
+/** 35 → "35¢", 235 → "$2.35". */
+export const money = (cents) => (cents >= 100 ? `$${(cents / 100).toFixed(2)}` : `${cents}¢`)

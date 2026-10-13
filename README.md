@@ -1,23 +1,34 @@
-# Maanu Learning
+# MA-learning
 
-A guided, playful learning app for **Aiden** (Grade 1) and **Aliya** (JK), built around their own year plans.
+Playful, adaptive learning for every kid in the family. A grown-up signs in, says how many kids they have and when each was born, and MA-learning builds a year plan for each child: a few minutes on screen, one activity together, and practice that gets harder as they improve.
 
-Each child opens to **Today**: three short on-screen steps and one activity to do together off the screen. Aiden runs the bases of a baseball diamond. Aliya's butterfly makes a garden bloom. After five days, a unit moves on to the next one.
+It grew out of [Maanu Learning](https://maanu-learning.netlify.app/), a two-child app, and takes cues from skill-based practice sites like IXL: graded skills, a score per skill that rises with steady accuracy, and a progress view for parents.
 
-## What's in it
+## How it works
 
-| | Aiden — Grade 1 | Aliya — JK |
+1. **Sign in.** Grown-ups only, with email and password or a one-time email link. Kids never need an account.
+2. **Set up the family.** Pick how many kids (1–6, more can be added later), then give each one a first name, a birthday, a buddy and a world: ⚾ Ballpark, 🌷 Garden or 🚀 Space.
+3. **Each child gets a plan for their level.** The birthday sets the level, using Ontario's school-year cut-off (JK in the year a child turns 4, Grade 1 in the year they turn 6). A grown-up can override it.
+
+| Level | Plan | Daily session |
 |---|---|---|
-| Curriculum | Ontario Grade 1 Mathematics (2020) and Language (2023) | Ontario Kindergarten Program (2016) |
-| Daily session | ~15 min | ~10 min, everything read aloud |
-| Units | Adding to 10 → Tens and ones → Add/take away to 20 → Counting patterns → Canadian coins → Greater/less → Ballpark story problems | Letters in my name (A L I Y) → Counting to 5 → s a t p i n → Counting to 10 → m d g o c k → More and fewer → The whole alphabet |
-| Trail | Baseball diamond: 1st, 2nd, 3rd, home | Flower garden: four blooms |
+| Pre-K | Letters in their name, counting to 5, shapes | ~8 min, read aloud |
+| JK | Ontario Kindergarten Program: name letters, counting to 10, first sounds | ~10 min, read aloud |
+| SK | Sounds, counting to 20, making 10, first sight words, coins | ~12 min, read aloud |
+| Grade 1 | Adding to 20, tens and ones, skip counting, coins, o'clock, story problems | ~15 min |
+| Grade 2 | Place value to 200, two-digit adding and subtracting, equal groups, fractions, quarter hours | ~15 min |
+| Grade 3 | Place value to 1000, multiplying and dividing, fractions to eighths, time to 5 minutes, money to $10 | ~20 min |
 
-**13 skills** generate endless questions that get harder as the child's Star Meter (0–100) climbs: Pop the letter, Big and little, First sounds, How many?, More or fewer, Ten-frame adding, Add and take away, Tens and ones, Greater or less, Skip counting, Canadian coins, Sight words and Baseball math.
+**Personalised plans.** The first unit uses the letters of the child's own name. Story problems happen in their chosen world. Off-screen activities and parent tips use their name.
 
-A wrong answer opens **Let's figure it out**: a worked visual (count-along, number-line hops, tens-and-ones blocks, running coin totals) with the answer read aloud.
+**How it adapts:**
+- **Questions.** Every skill has a Star Meter (0–100). As it climbs, numbers get bigger, distractors get closer, and harder variants appear, such as regrouping, quarter hours and subtraction.
+- **Units.** A unit normally lasts 5 days. It moves on early, after 3 days, when the unit's skills average 85+. A child still below 40 after 5 days gets extra practice days, up to 8.
+- **School years.** Plan progress is stored per level, so a child moves to a fresh plan for their new grade each September.
 
-**Grown-ups** shows the year as a timeline: each unit's goal, curriculum strand, activity idea, tip, and progress. A parent can move a child to any unit.
+**Grown-ups** sees the year as a timeline, plus a "This week" panel: questions per day, accuracy, the most-practised skills, and a nudge when one skill is under 70%.
+
+20 skills generate endless questions: Pop the letter, Big and little, First sounds, How many?, More or fewer, Find the shape, Ten-frame adding, Add and take away, Big adding and taking away, Tens and ones, Hundreds tens and ones, Greater or less, Skip counting, Canadian coins, Sight words, Story problems, Equal groups, Sharing equally, Fractions, and Tell the time.
 
 ## Run it
 
@@ -27,28 +38,41 @@ npm run dev      # http://localhost:5173
 npm run build    # static site in dist/
 ```
 
-Progress is saved in the browser (localStorage), per device.
+`.env` holds the Supabase project URL and its publishable key. Both are meant to be public. Row-level security keeps each family's data private.
+
+## Supabase
+
+Project `ma-learning` (ca-central-1). The schema is in `supabase/migrations/`:
+
+- `children`: one row per child. It holds the profile (name, birthday, avatar, world, level override) plus their progress (`stars`, per-skill `progress`, per-level `plan_state`, free-play level).
+- `answers`: one row per answered question, for the weekly view.
+
+Both tables only allow a signed-in grown-up to read and write their own family's rows (`family_id = auth.uid()`).
+
+Before going live, in the Supabase dashboard:
+- **Authentication → URL Configuration**: set the Site URL and redirect URLs to the deployed site, so confirmation and sign-in links come back to it.
+- **Authentication → Emails**: the built-in email sender is rate-limited and meant for testing. Add your own SMTP provider before inviting families.
 
 ## Where things live
 
 ```
-src/data/curriculum.js   year plans for each child: units, steps, activities, tips
-src/data/skills.js       the 13 skill generators (questions, choices, help)
-src/screens/             Who, Today, Practice, Off-screen, Skills (free play), Plan (grown-ups)
-src/components/          Trail, Visuals, Inputs (choices, balloons, keypad), Pip the mascot, confetti
-src/lib/                 Star Meter scoring, read-aloud and sound effects, storage
+src/data/curriculum.js   levels, age → level, and the per-level year plans
+src/data/skills.js       the 20 skill generators (questions, choices, help)
+src/lib/family.js        Supabase reads and writes for children and answers
+src/screens/             Auth, Setup, Family, Who, Today, Practice, Off-screen, Skills, Plan
+src/components/          Trail (3 worlds), Visuals and Shapes (drawings), WeekChart, Inputs, Pip
 ```
 
 ### Add a unit
 
-Add an object to a plan's `units` in `src/data/curriculum.js`. Each step is a skill id, optional `params` that narrow it (for example `{ letters: 'SATPIN' }`, `{ max: 5 }`, `{ ops: '+' }`, `{ set: 2 }`), and `n`, the number of questions.
+Add an object to a level's list in `units()` in `src/data/curriculum.js`. Each step is a skill id, optional `params` that narrow it (for example `{ letters: 'SATPIN' }`, `{ max: 100 }`, `{ step: 15 }`), and `n`, the number of questions.
 
 ### Add a skill
 
-Add an entry to `SKILLS` in `src/data/skills.js` with a `generate({ score, name, params })` function that returns a prompt, a visual, an input type (`choice`, `balloons` or `keypad`), choices, the answer and a help visual.
+Add an entry to `SKILLS` in `src/data/skills.js`. It needs the `levels` it belongs to, optional `byLevel` free-play params, and a `generate({ score, name, theme, params })` function. That function returns a prompt, a visual, an input type (`choice`, `balloons` or `keypad`), choices, the answer and a help visual.
 
 ## Deploy
 
 `netlify.toml` builds with `npm run build` and publishes `dist/`.
 
-No sound files, images or trackers: speech uses the browser's built-in voice, sound effects are synthesised, and drawings are SVG.
+No sound files, images or trackers. Speech uses the browser's built-in voice, sound effects are synthesised, and drawings are SVG.

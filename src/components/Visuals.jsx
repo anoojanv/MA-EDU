@@ -1,6 +1,8 @@
 import React, { useEffect, useId, useState } from 'react'
-import { COINS } from '../data/coins.js'
+import { COINS, money } from '../data/coins.js'
 import { speak, canSpeak } from '../lib/audio.js'
+import { Shape, Clock, Fraction, ArrayGrid } from './Shapes.jsx'
+import { SHAPES } from '../data/skills.js'
 
 export function SpeakerIcon({ size = 26 }) {
   return (
@@ -118,10 +120,19 @@ function NumberLine({ start, delta, max = 20 }) {
   )
 }
 
-function Blocks({ tens, ones, explain }) {
+function Blocks({ hundreds = 0, tens, ones, explain }) {
   return (
     <div className="blocks-wrap">
-      <div className="blocks" role="img" aria-label={`${tens} tens and ${ones} ones`}>
+      <div className="blocks" role="img" aria-label={`${hundreds ? `${hundreds} hundreds, ` : ''}${tens} tens and ${ones} ones`}>
+        {hundreds > 0 && (
+          <div className="blocks__hundreds">
+            {Array.from({ length: hundreds }, (_, i) => (
+              <div key={i} className="flat" style={{ '--i': i }}>
+                {Array.from({ length: 100 }, (_, j) => <span key={j} />)}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="blocks__tens">
           {Array.from({ length: tens }, (_, i) => (
             <div key={i} className="rod" style={{ '--i': i }}>
@@ -137,9 +148,10 @@ function Blocks({ tens, ones, explain }) {
       </div>
       {explain && (
         <div className="blocks__explain">
+          {hundreds > 0 && <span className="chip tone-green"><b>{hundreds}</b> hundreds = {hundreds * 100}</span>}
           <span className="chip tone-blue"><b>{tens}</b> tens = {tens * 10}</span>
           <span className="chip tone-clay"><b>{ones}</b> ones = {ones}</span>
-          <span className="blocks__sum">{tens * 10} + {ones} = {tens * 10 + ones}</span>
+          <span className="blocks__sum">{hundreds > 0 ? `${hundreds * 100} + ` : ''}{tens * 10} + {ones} = {hundreds * 100 + tens * 10 + ones}</span>
         </div>
       )}
     </div>
@@ -190,7 +202,7 @@ function Coins({ coins, running }) {
         return (
           <div key={i} className="coins__one" style={{ '--i': i }}>
             <Coin kind={k} size={76} />
-            {running && <span className="coins__run" style={{ '--i': i }}>{total}¢</span>}
+            {running && <span className="coins__run" style={{ '--i': i }}>{money(total)}</span>}
           </div>
         )
       })}
@@ -278,9 +290,13 @@ export function QuestionVisual({ q }) {
     case 'equation': return <div className="eq eq--big">{v.text}</div>
     case 'compare': return <Compare a={v.a} b={v.b} />
     case 'sequence': return <Sequence items={v.items} blank={v.blank} />
-    case 'blocks': return <Blocks tens={v.tens} ones={v.ones} />
+    case 'blocks': return <Blocks hundreds={v.hundreds} tens={v.tens} ones={v.ones} />
     case 'coins': return <Coins coins={v.coins} />
     case 'story': return <Story a={v.a} b={v.b} sub={v.sub} emoji={v.emoji} />
+    case 'storyIcon': return <div className="story-icon" aria-hidden="true">{v.emoji}</div>
+    case 'array': return <ArrayGrid rows={v.rows} cols={v.cols} emoji={v.emoji} />
+    case 'fraction': return <Fraction parts={v.parts} shaded={v.shaded} shape={v.shape} />
+    case 'clock': return <Clock h={v.h} m={v.m} />
     default: return null
   }
 }
@@ -310,7 +326,37 @@ export function HelpVisual({ help }) {
     case 'numberLine': body = <NumberLine start={help.start} delta={help.delta} max={help.max} />; break
     case 'compare': body = <Compare a={help.a} b={help.b} sym={help.sym} />; break
     case 'sequence': body = <Sequence items={help.items} blank={help.blank} step={help.step} reveal />; break
-    case 'blocks': body = <Blocks tens={help.tens} ones={help.ones} explain />; break
+    case 'blocks': body = <Blocks hundreds={help.hundreds} tens={help.tens} ones={help.ones} explain />; break
+    case 'split':
+      body = (
+        <div className="split">
+          {help.rows.map((r, i) => <div key={i} className={'eq eq--sm' + (i === help.rows.length - 1 ? ' is-last' : '')} style={{ '--i': i }}>{r}</div>)}
+        </div>
+      )
+      break
+    case 'shape':
+      body = (
+        <div className="shape-help">
+          <Shape kind={help.shape} tone="blue" size={140} />
+          <b>{SHAPES[help.shape].name}</b>
+        </div>
+      )
+      break
+    case 'array': body = <ArrayGrid rows={help.rows} cols={help.cols} emoji={help.emoji} totals />; break
+    case 'share':
+      body = (
+        <div className="groups groups--share">
+          {Array.from({ length: help.groups }, (_, g) => (
+            <div key={g} className="groups__one" style={{ '--i': g }}>
+              <Items emoji={help.emoji} n={help.each} cols={Math.min(help.each, 3)} small />
+              <b>{help.each}</b>
+            </div>
+          ))}
+        </div>
+      )
+      break
+    case 'fraction': body = <Fraction parts={help.parts} shaded={help.shaded} shape={help.shape} labelled />; break
+    case 'clock': body = <Clock h={help.h} m={help.m} size={180} />; break
     case 'coinFact': {
       const c = COINS[help.coin]
       body = (
